@@ -218,6 +218,7 @@ for index, song_id in enumerate(selected_ids, offset + 1):
         f"{index}. {song.get('name', '?')} - {artists} "
         f"(ID:{song.get('id')})"
     )
+
 return {
         "name": playlist.get('name'),
         "total": total,
