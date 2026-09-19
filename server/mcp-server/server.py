@@ -202,12 +202,13 @@ def get_playlist_songs(params):
                 songs_by_id[str(song.get('id'))] = song
 output = []
 
-    # Preserve original playlist order.
-    for index, song_id in enumerate(selected_ids, offset + 1):
-        song = songs_by_id.get(song_id)
-        if not song:
-            output.append(f"{index}. [Unavailable] (ID:{song_id})")
-            continue
+# Preserve original playlist order.
+for index, song_id in enumerate(selected_ids, offset + 1):
+    song = songs_by_id.get(song_id)
+    if not song:
+        output.append(f"{index}. [Unavailable] (ID:{song_id})")
+        continue
+          
           artists = ', '.join(
             artist.get('name', '')
             for artist in song.get('ar', [])
