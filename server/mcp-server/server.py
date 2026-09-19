@@ -151,20 +151,80 @@ def list_my_playlists(params):
     return {"playlists": output}
 
 def get_playlist_songs(params):
-    """Get all songs in a playlist."""
+    """Get all songs in a playlist with pagination."""
     pid = params.get('playlist_id')
     if not pid:
         return {"error": "playlist_id required"}
-    result = netease_request(f'/api/v6/playlist/detail?id={pid}', method='GET')
+      
+       offset = max(int(params.get('offset', 0)), 0)
+    limit = min(max(int(params.get('limit', 100)), 1), 200)
+
+    result = netease_request(
+      f'/api/v6/playlist/detail?id={pid}', 
+      method='GET'
+    )
     if not result or result.get('code') != 200:
         return {"error": "Failed to get playlist", "detail": result}
+      
     playlist = result.get('playlist', {})
-    tracks = playlist.get('tracks', [])
-    output = []
-    for i, t in enumerate(tracks, 1):
-        artists = ', '.join(a['name'] for a in t.get('ar', []))
-        output.append(f"{i}. {t['name']} - {artists} (ID:{t['id']})")
-    return {"name": playlist.get('name'), "songs": output}
+
+    # playlist["tracks"] may contain only a small subset.
+    # trackIds normally contains the complete playlist order.
+    track_ids = [
+        str(item.get('id'))
+        for item in playlist.get('trackIds', [])
+        if item.get('id') is not None
+    ]
+     # Fallback for unusual responses.
+    if not track_ids:
+        track_ids = [
+            str(item.get('id'))
+            for item in playlist.get('tracks', [])
+            if item.get('id') is not None
+        ]
+   total = len(track_ids)
+    selected_ids = track_ids[offset:offset + limit]
+
+    songs_by_id = {}
+
+    # Fetch details in small batches.
+    for start in range(0, len(selected_ids), 50):
+        batch = selected_ids[start:start + 50]
+        c_param = json.dumps([{"id": int(song_id)} for song_id in batch])
+    
+        detail = netease_request(
+            '/api/v3/song/detail',
+            data={'c': c_param}
+        )
+
+        if detail and detail.get('code') == 200:
+            for song in detail.get('songs', []):
+                songs_by_id[str(song.get('id'))] = song
+output = []
+
+    # Preserve original playlist order.
+    for index, song_id in enumerate(selected_ids, offset + 1):
+        song = songs_by_id.get(song_id)
+        if not song:
+            output.append(f"{index}. [Unavailable] (ID:{song_id})")
+            continue
+          artists = ', '.join(
+            artist.get('name', '')
+            for artist in song.get('ar', [])
+        )
+
+        output.append(
+            f"{index}. {song.get('name', '?')} - {artists} "
+            f"(ID:{song.get('id')})"
+        )
+return {
+        "name": playlist.get('name'),
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "returned": len(output),
+        "songs": output
+    }
 
 def create_playlist(params):
     """Create a new playlist."""
