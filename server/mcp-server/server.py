@@ -362,8 +362,21 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "list_my_playlists", "description": "List all playlists of the logged-in user.",
      "inputSchema": {"type": "object", "properties": {}}},
-    {"name": "get_playlist_songs", "description": "Get all songs in a playlist.",
-     "inputSchema": {"type": "object", "properties": {"playlist_id": {"type": "integer", "description": "Playlist ID"}}, "required": ["playlist_id"]}},
+  {"name": "get_playlist_songs", "description": "Get songs in a playlist with pagination.",
+ "inputSchema": {"type": "object", "properties": {
+     "playlist_id": {
+         "type": "integer",
+         "description": "Playlist ID"
+     },
+     "offset": {
+         "type": "integer",
+         "description": "Start position, default 0"
+     },
+     "limit": {
+         "type": "integer",
+         "description": "Number of songs to return, default 100, max 200"
+     }
+ }, "required": ["playlist_id"]}},
     {"name": "create_playlist", "description": "Create a new playlist.",
      "inputSchema": {"type": "object", "properties": {"name": {"type": "string", "description": "Playlist name"}, "description": {"type": "string", "description": "Playlist description"}, "privacy": {"type": "integer", "description": "0=public, 10=private"}}, "required": ["name"]}},
     {"name": "add_to_playlist", "description": "Add songs to a playlist.",
