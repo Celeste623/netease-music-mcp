@@ -156,7 +156,7 @@ def get_playlist_songs(params):
     if not pid:
         return {"error": "playlist_id required"}
       
-       offset = max(int(params.get('offset', 0)), 0)
+    offset = max(int(params.get('offset', 0)), 0)
     limit = min(max(int(params.get('limit', 100)), 1), 200)
 
     result = netease_request(
