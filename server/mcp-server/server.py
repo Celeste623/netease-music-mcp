@@ -1,3 +1,4 @@
+import http.server, json, os, urllib.request, urllib.parse, threading, uuid, time, logging, hmac
 #!/usr/bin/env python3
 """NetEase Cloud Music MCP Server - Pure Python, zero dependencies.
 
@@ -16,6 +17,7 @@ NETEASE_CSRF = os.environ.get("NETEASE_CSRF", "")
 PORT = int(os.environ.get("MCP_PORT", "3456"))
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 SESSION_ID = str(uuid.uuid4())
+MCP_API_TOKEN = os.environ.get("MCP_API_TOKEN", "").strip()
 
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
                     format='%(asctime)s [%(levelname)s] %(message)s')
@@ -431,6 +433,10 @@ TOOL_DISPATCH = {
 
 # --- MCP Protocol Handler ---
 class MCPHandler(http.server.BaseHTTPRequestHandler):
+    def _authorized(self):
+        auth = self.headers.get("Authorization", "")
+        expected = f"Bearer {MCP_API_TOKEN}"
+        return bool(MCP_API_TOKEN) and hmac.compare_digest(auth, expected)
     def _cors(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -450,11 +456,20 @@ class MCPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/health':
             self._json_response({"status": "ok", "tools": len(TOOLS), "version": "3.1.0"})
-        elif self.path == '/sse':
+            return
+
+        if not self._authorized():
+            self._json_response({"error": "Unauthorized"}, 401)
+            return
+
+        if self.path == '/sse':
             self._handle_sse()
         else:
             self._json_response({"error": "Not found"}, 404)
     def do_POST(self):
+        if not self._authorized():
+          self._json_response({"error": "Unauthorized"}, 401)
+          return
         length = int(self.headers.get('Content-Length', 0))
         body = json.loads(self.rfile.read(length)) if length else {}
         method = body.get('method', '')
