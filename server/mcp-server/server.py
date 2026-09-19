@@ -209,15 +209,15 @@ for index, song_id in enumerate(selected_ids, offset + 1):
         output.append(f"{index}. [Unavailable] (ID:{song_id})")
         continue
           
-          artists = ', '.join(
-            artist.get('name', '')
-            for artist in song.get('ar', [])
-        )
+    artists = ', '.join(
+        artist.get('name', '')
+        for artist in song.get('ar', [])
+   )
 
-        output.append(
-            f"{index}. {song.get('name', '?')} - {artists} "
-            f"(ID:{song.get('id')})"
-        )
+    output.append(
+        f"{index}. {song.get('name', '?')} - {artists} "
+        f"(ID:{song.get('id')})"
+    )
 return {
         "name": playlist.get('name'),
         "total": total,
