@@ -226,7 +226,7 @@ return {
         "limit": limit,
         "returned": len(output),
         "songs": output
-    }
+}
 
 def create_playlist(params):
     """Create a new playlist."""
