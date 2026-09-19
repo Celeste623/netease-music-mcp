@@ -182,7 +182,7 @@ def get_playlist_songs(params):
             for item in playlist.get('tracks', [])
             if item.get('id') is not None
         ]
-   total = len(track_ids)
+    total = len(track_ids)
     selected_ids = track_ids[offset:offset + limit]
 
     songs_by_id = {}
